@@ -15,12 +15,13 @@ library(sp)
 library(sf)
 library(ggspatial)
 library(ggmap)
+library(writexl)
 
 ##### Get Data #####
 
 #bike incidents list
-
-bike_incidents <- read_csv("Crash_Reporting_-_Non-Motorists_Data.csv")
+#API returns only 1000 rows, use csv to access full dataset
+bike_incidents <- read_csv("data/Crash_Reporting_-_Non-Motorists_Data.csv")
 
 bike_incidents <- bike_incidents %>%
   filter(`Pedestrian Type` == "BICYCLIST")
@@ -67,7 +68,8 @@ incidents_no_street <- incidents_no_street %>%
 #since there are only 30 I'll just drop them
 
 streets_with_incidents <- bike_incidents %>%
-  group_by(`Road Name`) %>%
+  rename(name = `Road Name`) %>%
+  group_by(name) %>%
   summarise(n = n()) %>%
   na.omit()
 
@@ -84,7 +86,24 @@ osm_streets <- opq(bbox = moco_bb) %>%
 streets <- as(osm_streets$osm_lines,"SpatialLines")
 
 streets_df <- as.data.frame(osm_streets$osm_lines)
+streets_df$name <- toupper(streets_df$name)
 
+#use {reclin} to match street names
+#without a blocking variable this takes a long time....
+
+#possible_pairs <- pair_blocking(streets_with_incidents,streets_df) %>%
+#  compare_pairs(by=c("name"),default_comparator = lcs()) %>%
+#  score_problink() %>%
+#  select_n_to_m() %>%
+#  link(all_x = T,all_y=F) 
+
+#save output, clean by hand, and read it in so I don't have to run this block again
+
+write_xlsx(possible_pairs,"possible_street_pairs.xlsx")
+
+matched_streets <- read_excel("possible_street_pairs_cleaned.xlsx") %>%
+  rename(osm_name = name.y,
+         moco_name = name.x)
 #to do: 
-#-filter for streets of interest
-#-calculate length of streets
+#-filter for streets of interest (has had an accident)
+#-find length of road/road segment
