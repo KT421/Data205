@@ -14,7 +14,7 @@ This capstone project is intended to provide recommendations on the highest impa
 - [x] Connect Datasets - record linkage
     - [x] Bikeshare station names <-> MoCo Data station names
     - [x] OpenStreetMap street names <-> MoCo incident data street names
-- [ ] Move all of the time intensive data import/cleaning to separate script
+- [x] Move all of the time intensive data import/cleaning to separate script
 
 ### Finding Bike Lanes - March 31
 
