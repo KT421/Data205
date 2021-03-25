@@ -1,0 +1,109 @@
+---
+title: "Bike Incidents & Existing Lanes"
+output: github_document
+
+---
+
+# Packages & Data
+
+```{r message = FALSE}
+library(tidyverse)
+library(ggmap)
+library(osmdata)
+library(tidyverse)
+library(sp)
+library(sf)
+library(ggspatial)
+library(ggmap)
+library(writexl)
+library(osmar)
+library(osrmr)
+
+load("data/bike_data.RData")
+```
+
+# Visualizaing 
+
+```{r message = FALSE}
+map2 <- get_map(location = moco_bb)
+
+ggmap(map2) +
+  geom_point(data = bike_incidents, aes(x = Longitude, y = Latitude, color = `Injury Severity`)) +
+  layer_spatial(cycleways) + 
+  labs(title = "Bike Incident Severity Map with Cycleways")
+```
+
+# Match Incidents to Cycleway status
+
+This makes the assumption that if a cycleway (bike lane or trail) exists, the cyclist was using it.
+
+```{r}
+#snap points to the lines (road segments) that they are nearest to
+
+sp_bike_incidents <- bike_incidents %>%
+  select(Latitude,Longitude) %>%
+  as.matrix()
+
+sp_bike_incidents <- SpatialPointsDataFrame(coords = sp_bike_incidents, data = bike_incidents)
+sf_bike_incidents <- st_as_sf(sp_bike_incidents)
+
+cycleways_df <- SpatialLinesDataFrame(cycleways)
+  
+snapped_points <- st_nearest_points(sf_bike_incidents,sf_cycleways,pairwise = FALSE)
+
+#### will have to come back to this
+# cause it's broke af
+
+
+#trying again, cause this is the key to *everything else*
+test_accident <- c(bike_incidents$Longitude[1],bike_incidents$Latitude[1])
+
+streets <- as(osm_streets$osm_lines,"SpatialLinesDataFrame")
+streets_coords <- coordinates(streets@lines$`4873792`)
+
+x <- "4873792"
+
+test_street <- coordinates(streets@lines$`4873792`@Lines[1])
+test_street_id <- streets@lines$`4873792`@ID
+
+streets@lines$`4873792`@ID
+
+test2 <- streets@lines[1]
+
+test2$`4873792`@Lines
+
+test_street[1,]
+
+distm(test_accident,test_street)
+
+#IT WORKS - for a single accident and a single test street. Need to get it for everything
+
+test_set <- as(streets, "SpatialPointsDataFrame")
+
+test_set@coords
+
+osm_points(osm_streets,4873792)
+
+lengthLine(test_street)
+
+#ok instead let's get lengths for every object in the set and just matched that to my matched_streets dataframe
+
+street_lengths <- NULL
+
+for (i in 1:length(streets@lines)) {
+  if (i %notin% matched_streets$osm_id) {
+    skip
+  }
+  
+  length_meters <- lengthLine(x[[1]])
+}
+
+```
+
+# Correlation Matrix of other conditions
+
+```{r}
+
+
+```
+

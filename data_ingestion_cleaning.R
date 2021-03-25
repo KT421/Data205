@@ -156,7 +156,7 @@ streets_with_incidents <- bike_incidents %>%
 #will need to find out low long each road actually is
 
 #get data about all streets in MoCo that have names
-## this may take a few minutes and will 906 MB worth of data
+## this may take a few minutes and will download 906 MB worth of data
 osm_streets <- opq(bbox = moco_bb) %>%
   add_osm_feature(key = 'highway') %>%
   add_osm_feature(key = 'name') %>%
@@ -188,4 +188,4 @@ matched_streets <- read_excel("possible_street_pairs_cleaned.xlsx") %>%
 #save objects for use in other scripts
 
 
-save(bike_incidents,cycleways,matched_streets,moco_bb,moco_stations,osm_cycleways, file="data/bike_data.RData")
+save(bike_incidents,cycleways,matched_streets,moco_bb,moco_stations,osm_cycleways,osm_streets, file="data/bike_data.RData")

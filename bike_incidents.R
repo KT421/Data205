@@ -26,6 +26,7 @@ map2 <- get_map(location = moco_bb)
 plot(map2)
 
 ggmap(map2) +
-  geom_point(data = bike_incidents, aes(x = Longitude, y = Latitude, color = `Injury Severity`)) 
+  geom_point(data = bike_incidents, aes(x = Longitude, y = Latitude, color = `Injury Severity`)) +
+  layer_spatial(cycleways)
 
-#find street length
+#where do bike lanes exist?
