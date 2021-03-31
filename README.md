@@ -18,9 +18,8 @@ This capstone project is intended to provide recommendations on the highest impa
 
 ### Finding Bike Lanes - March 31
 
-- [ ] Where do bike lanes already exist?
-    - [ ] Is there a correlation between bike lane status and incident occurrence/severity?
-    - [ ] What other correlations exist? (weather, daylight, etc)
+- [x] Where do bike lanes already exist?
+    - [ ] Connect bikelane data to incident data (find nearest line segment to point)
 
 ### Estimating Bike Traffic - April 7 
 
@@ -36,11 +35,11 @@ This capstone project is intended to provide recommendations on the highest impa
 
 - [ ] What is the bicycle compatibility Index (BCI) for each road in Montgomery County where a bicyclist-involved accident has occurred in 2017-2020?
 
-
 ### Predicted Change in Incident Rate - April 21
 
 - [ ] Correlation of BCI and Incident rate?
-- [ ] Prediction of change in Incident rate if a bike lane is installed (increase in BCI?)
+    - [ ] What other correlations exist? (weather, daylight, etc)
+- [ ] Prediction of change in Incident rate if a bike lane is installed (decrease in BCI?)
 
 ### Synthesizing data - April 28
 
