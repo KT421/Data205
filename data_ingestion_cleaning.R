@@ -115,11 +115,21 @@ bike_incidents <- bike_incidents %>%
 
 moco_bb <- getbb("Montgomery County, MD")
 
+#this gets bike trails
 osm_cycleways <- opq(bbox = moco_bb) %>%
-  add_osm_feature(key = 'highway', value = 'cycleway') %>%
-  osmdata_sp()
+  add_osm_feature(key = 'highway', value = 'cycleway')
 
-cycleways <- as(osm_cycleways$osm_lines,"SpatialLines")
+
+#streets w bike lanes
+osm_bikelanes <- opq(bbox = moco_bb) %>%
+  add_osm_feature(key = "cycleway") 
+
+
+#bike lanes AND cycleways - full picture of bike infrastructure
+
+osm_bike <- c(osmdata_sf(osm_cycleways),osmdata_sf(osm_bikelanes))
+
+plot(osm_bike$osm_lines$geometry)
 
 ##### Get map #####
 
@@ -152,15 +162,12 @@ streets_with_incidents <- bike_incidents %>%
   summarise(n = n()) %>%
   na.omit()
 
-#now, can I normalize by mile?
-#will need to find out low long each road actually is
-
 #get data about all streets in MoCo that have names
 ## this may take a few minutes and will download 906 MB worth of data
 osm_streets <- opq(bbox = moco_bb) %>%
   add_osm_feature(key = 'highway') %>%
   add_osm_feature(key = 'name') %>%
-  osmdata_sp()
+  osmdata_sf()
 
 streets <- as(osm_streets$osm_lines,"SpatialLines")
 
@@ -188,4 +195,4 @@ matched_streets <- read_excel("possible_street_pairs_cleaned.xlsx") %>%
 #save objects for use in other scripts
 
 
-save(bike_incidents,cycleways,matched_streets,moco_bb,moco_stations,osm_cycleways,osm_streets, file="data/bike_data.RData")
+save(bike_incidents,matched_streets,moco_bb,moco_stations,osm_streets,bikerides,osm_bike, file="data/bike_data.RData")

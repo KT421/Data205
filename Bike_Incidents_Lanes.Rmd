@@ -8,16 +8,12 @@ output: github_document
 ```{r message = FALSE}
 library(tidyverse)
 library(ggmap)
-library(osmdata)
 library(tidyverse)
-library(sp)
 library(sf)
+library(geosphere)
 library(ggspatial)
-library(ggmap)
-library(writexl)
-library(osmar)
-library(osrmr)
 library(GGally)
+library(mapview)
 
 load("data/bike_data.RData")
 ```
@@ -29,39 +25,108 @@ map2 <- get_map(location = moco_bb)
 
 ggmap(map2) +
   geom_point(data = bike_incidents, aes(x = Longitude, y = Latitude, color = `Injury Severity`)) +
-  layer_spatial(cycleways) + 
-  labs(title = "Bike Incident Severity Map with Cycleways")
+  layer_spatial(osm_bike$osm_lines$geometry) + 
+  labs(title = "Bike Incident Severity Map with Bike Lanes") +
+  theme(legend.position = c(0.8,0.8))
 
+ggsave("incidents_cycleways.png", width = 9, height = 9, units = "in")
+  
 ggmap(map2) +
   layer_spatial(streets)
 ```
 
-# Match Incidents to Cycleway status
+# Find road lenghts
 
 This makes the assumption that if a cycleway (bike lane or trail) exists, the cyclist was using it.
 
 ```{r}
-#snap points to the lines (road segments) that they are nearest to
 
-sp_bike_incidents <- bike_incidents %>%
-  select(Latitude,Longitude) %>%
-  as.matrix()
-
-sp_bike_incidents <- SpatialPointsDataFrame(coords = sp_bike_incidents, data = bike_incidents)
-sf_bike_incidents <- st_as_sf(sp_bike_incidents)
-
-cycleways_df <- SpatialLinesDataFrame(cycleways)
-  
-snapped_points <- st_nearest_points(sf_bike_incidents,sf_cycleways,pairwise = FALSE)
-
-#### will have to come back to this
-# cause it's broke af
-
-
-#trying again, cause this is the key to *everything else*
-test_accident <- c(bike_incidents$Longitude[1],bike_incidents$Latitude[1])
-
+# Length of road data (for incident per mile calculation)
 streets <- as(osm_streets$osm_lines,"SpatialLinesDataFrame")
+
+streets_df <- data.frame(streets@data)
+
+
+#Each road has multiple segments on our list because its characteristics can change
+#loop through each to find all the segment ids, then add up all the segment lengths
+
+road_lengths <- NULL
+
+for (i in matched_streets$osm_name) {
+
+street <- streets_df %>%
+  filter(toupper(name) == i) 
+
+road_length <- 0
+
+  for (j in street$osm_id)  {
+
+  x <- paste0("streets@lines$`",j,"`@Lines")
+
+  segment <- lengthLine(eval(parse(text = x))[[1]]@coords)
+
+  road_length <- road_length + segment
+
+  
+  }
+  road_name <- street$name
+  road_df <- data.frame(road_name,road_length)
+  road_lengths <- bind_rows(road_lengths,road_df)
+
+}
+
+#it worked but there's a row for each segment instead of a row for each street. Also need to convert to miles.
+
+road_lengths <- road_lengths %>%
+  distinct() %>%
+  mutate(road_length = road_length * 0.00062137,
+         road_name = toupper(road_name)) %>%
+  rename(osm_name = road_name)
+
+matched_streets <- matched_streets %>%
+  inner_join(road_lengths) %>%
+  mutate(incidents_per_mile = n / road_length)
+
+#which streets have the highest accident rate?
+
+accident_rate <- matched_streets %>%
+  select(osm_name,n,road_length,incidents_per_mile) %>%
+  arrange(desc(incidents_per_mile)) %>%
+  view()
+
+accident_rate_trimmed <- accident_rate %>%
+  filter(n >= 3)
+
+```
+
+
+# Correlation of bike lane status to injury severity
+
+```{r}
+
+test_accident <- bike_incidents[1] %>%
+  st_sf()
+######
+#coord system mismatch? Here's where I left off......
+######
+
+#convert lines to a series of points
+points <- st_segmentize(st_as_sf(streets), dfMaxLength = 10) %>%
+  st_sf() %>%
+  st_cast('POINT')
+
+#find the nearest point to the test accident
+nearest <- which.min(st_distance(test_accident, points))
+
+
+
+```
+
+```{r}
+#scratch
+
+#keeping broken code snips here in case they're useful
+
 
 test_street <- as(streets@lines$`697630636`,"SpatialPoints")
 test_street_id <- streets@lines$`697630636`@ID
@@ -71,46 +136,6 @@ distm(test_accident,test_street@coords)
 lengthLine(test_street@coords)
 #this makes meters
 
-#and find out which street it is:
-street_name <- matched_streets %>%
-  filter(osm_id == "697630636")
-
-# Length of road data (for incident per mile calculation)
-
-streets_test_df <- data.frame(streets@data)
-
-quince_orchard <- streets_test_df %>%
-  filter(name == "Quince Orchard Road") 
-#OK I get it.
-#Each road has multiple segments on our list because its characteristics can change
-
-quince_length <- 0
-
-for (i in quince_orchard$osm_id) {
-
-x <- paste0("streets@lines$`",i,"`@Lines")
-
-segment <- lengthLine(eval(parse(text = x))[[1]]@coords)
-
-quince_length <- quince_length + segment
-}
-
-# IT WORKS IT WORKS OMFG IT WORKS
-# next to loop de loop
-
-#1 Loop through the Matched Streets list calculating length
-#2 Loop through the matched Streets list and incidents list looking for cycleway status
-
-```
-
-
-# Correlation of bike lane status to injury severity
-
-```{r}
-bike_incidents %>%
-  filter(`Pedestrian Location` == 'IN BIKEWAY') %>%
-  summarise(n=n())
-
-
+streets_df$name[name = "UNIVERSITY"]
 ```
 
