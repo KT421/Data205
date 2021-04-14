@@ -29,8 +29,8 @@ This capstone project is intended to provide recommendations on the highest impa
 
 ### Using QGIS - April 14
 
-- [ ] Use QGIS to examine and extract LTS data
-    -[ ] Connect each incident to the LTS score and other available road data for that road segment
+- [x] Use QGIS to examine and extract LTS data  
+    - [x] Connect each incident to the LTS score and other available road data for that road segment
 
 ### Predicted Change in Incident Rate - April 21
 

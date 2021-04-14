@@ -14,6 +14,7 @@ library(geosphere)
 library(ggspatial)
 library(GGally)
 library(mapview)
+library(readxl)
 
 load("data/bike_data.RData")
 ```
@@ -31,8 +32,6 @@ ggmap(map2) +
 
 ggsave("incidents_cycleways.png", width = 9, height = 9, units = "in")
   
-ggmap(map2) +
-  layer_spatial(streets)
 ```
 
 # Find road lenghts
@@ -94,48 +93,96 @@ accident_rate <- matched_streets %>%
   arrange(desc(incidents_per_mile)) %>%
   view()
 
+#lets filter out roads with 3 or fewer accidents just to focus on places that are higher impact
+
 accident_rate_trimmed <- accident_rate %>%
   filter(n >= 3)
 
-```
-
-
-# Correlation of bike lane status to injury severity
-
-```{r}
-
-test_accident <- bike_incidents[1] %>%
-  st_sf()
-######
-#coord system mismatch? Here's where I left off......
-######
-
-#convert lines to a series of points
-points <- st_segmentize(st_as_sf(streets), dfMaxLength = 10) %>%
-  st_sf() %>%
-  st_cast('POINT')
-
-#find the nearest point to the test accident
-nearest <- which.min(st_distance(test_accident, points))
-
-
+head(accident_rate_trimmed)
 
 ```
 
+
+# EDA of joined incident and LTS data
+
+Used QGIS and the NNJoin plugin to join the LTS data to the Crash Reporting dataset; each incident has been joined to the characteristics of the nearest road segment.
+
+[LTS Methodology](https://montgomeryplanning.org/wp-content/uploads/2017/11/Appendix-D.pdf)
+
+Revised LTS Key: 
+    - LTS 0 – None (separated trails and breezeways)
+    - LTS 1 – Very Low (Neighborhood roads, suitable for children)
+    - LTS 2 – Low ("suitable for most adults")
+    - LTS 2.5 – Moderate Low
+    - LTS 3 – Moderate High (four lane road with bike lane)
+    - LTS 4 – High (>40mph road)
+    - LTS 5 – Very High ("few bicyclists will brave these roads")
+    - LTS 9 - (not defined in methodology document; appears to be freeways/ramps. Accidents reported on these roads are n=11, 9 of which are labeled as at crossings)
+    - TRANS - (not defined in methodology document; appears to be Transit station related?)
+    - P - (not defined in methodology document; appears to be parking lots)
+
 ```{r}
-#scratch
 
-#keeping broken code snips here in case they're useful
+joined_lts_crash <- read_excel("joined_lts_crash.xlsx")
+
+#The `distance` column is distance to nearest neighbor; let's remove those that are distant from any given street, allowing for GPS imprecision 
+
+joined_lts_crash_filtered <- joined_lts_crash %>%
+  filter(distance < 50) %>%
+  filter(!is.na(join_LTS_REV))
+
+order <- c("NO APPARENT INJURY",
+           "POSSIBLE INJURY",
+           "SUSPECTED MINOR INJURY",
+           "SUSPECTED SERIOUS INJURY",
+           "FATAL INJURY")
+```
+
+## LTS by incident severity
+
+```{r}
+ggplot(joined_lts_crash_filtered,aes(x=join_LTS_REV,fill=factor(`Injury Severity`, levels = order))) +
+  geom_bar() +
+  labs(title="Bike Incident Injury Severity by \n Level of Traffic Stress (LTS) of nearest street",
+       x="LTS",
+       y="Number of incidents",
+       fill="Injury Severity")
+
+table(joined_lts_crash_filtered$join_LTS,factor(joined_lts_crash_filtered$`Injury Severity`,levels = order))
+
+```
+
+## Injury Severity by other road characteristics
+
+```{r}
+ggplot(joined_lts_crash_filtered,aes(x=join_AVG_SLOPE,y=factor(`Injury Severity`, levels = order))) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.1) +
+  labs(title = "Injury Severity by \n Average Slope of road segment",
+       x = "Average Slope",
+       y = "Injury Severity")
+
+ggplot(joined_lts_crash_filtered,aes(x=as.double(join_SPEEDLIM),y=factor(`Injury Severity`, levels = order))) +
+  geom_boxplot()  +
+  geom_jitter(alpha = 0.1) +
+  labs(title = "Injury Severity by \n speed limit of road segment",
+       x = "Speed Limit",
+       y = "Injury Severity")
+
+ggplot(joined_lts_crash_filtered,aes(x=as.double(join_BKLNWIDTH),y=factor(`Injury Severity`, levels = order))) +
+  geom_jitter(alpha=0.3,shape = 16) +
+  labs(title = "Injury Severity by \n Bike Lane Width of road segment",
+       x = "Bike Lane Width (in feet) \n (0 means no bike lane)",
+       y = "Injury Severity")
+
+```
+
+# Correlation of Incident Severity and LTS
+
+Since we don't have traffic data, we can't make assumptions about the impact of LTS on incident rate - we just don't have the denominator. We *can* make assumptions about incident severity. 
+
+```{r}
 
 
-test_street <- as(streets@lines$`697630636`,"SpatialPoints")
-test_street_id <- streets@lines$`697630636`@ID
-
-distm(test_accident,test_street@coords)
-
-lengthLine(test_street@coords)
-#this makes meters
-
-streets_df$name[name = "UNIVERSITY"]
 ```
 
