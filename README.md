@@ -1,9 +1,16 @@
-# Data205 Capstone Project
+# Prioritizing New Bike Infrastructure in Montgomery County, MD
 
 Katelyn Schreyer   
 Spring 2021
+DATA 205
 
 This capstone project is intended to provide recommendations on the highest impact locations for new bicycle infrastructure in Montgomery County, Maryland. 
+
+## File Directory
+
+Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` files are configured to display well in the github web-based interface, while the `.Rmd` files are suitable for cloning into RStudio to run locally. 
+
+- **FILE DIRECTORY GOES HERE**
 
 ## Project Timeline
 
@@ -34,15 +41,14 @@ This capstone project is intended to provide recommendations on the highest impa
 
 ### Predicted Change in Incident Rate - April 21
 
-- [ ] Correlation of LTS and Incident rate? Severity?
-    - [ ] What other correlations exist? (weather, daylight, etc)
-- [ ] Prediction of change in Incident rate if a bike lane is installed (decrease in LTS?)
+- [x] Association of LTS and injury severity?
+    - [x] What other associations exist? (weather, daylight, etc)
+- [x] Clean up git repo
 
 ### Synthesizing data - April 28
 
 - [ ] Which roads or road segments should be prioritized for bike lane additions? 
-    - [ ] Synthesis of low LTS, high bike traffic, possibly also incident/mile rate
-- [ ] implement `{renv}` with finalized package list
+    - [ ] Synthesis of high incident/mile rate, existing infrastructure, planned infrastructure 
 
 ### Draft Report - May 5
 
@@ -55,16 +61,8 @@ This capstone project is intended to provide recommendations on the highest impa
 - [ ] Final Report
 - [ ] Final Presentation
 
-## References
-
-- [Geocomputation with R](https://geocompr.robinlovelace.net/)
-- [30 Day Map Challenge](https://rud.is/books/30-day-map-challenge/)
-
 ## Data Sources
 
-- [dataMontgomery Capital Bikeshare Stations](https://data.montgomerycountymd.gov/Community-Recreation/Bikeshare/pdp9-g3gw)
-- [Capital Bikeshare system data](https://www.capitalbikeshare.com/system-data)
 - [dataMontgomery Non-motorist collisions](https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Non-Motorists-Data/n7fk-dce5)
 - [OpenStreetMap](https://www.openstreetmap.org/)
-- [OpenRouteService](https://openrouteservice.org/)
 - [Montgomery Countery Bicycle Master Plan](https://montgomeryplanning.org/planning/transportation/bicycle-planning/bicycle-master-plan/)

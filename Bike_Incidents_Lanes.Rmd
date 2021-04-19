@@ -8,12 +8,10 @@ output: github_document
 ```{r message = FALSE}
 library(tidyverse)
 library(ggmap)
+library(ggspatial)
 library(tidyverse)
 library(sf)
 library(geosphere)
-library(ggspatial)
-library(GGally)
-library(mapview)
 library(readxl)
 
 load("data/bike_data.RData")
@@ -84,14 +82,14 @@ road_lengths <- road_lengths %>%
 
 matched_streets <- matched_streets %>%
   inner_join(road_lengths) %>%
-  mutate(incidents_per_mile = n / road_length)
+  mutate(incidents_per_mile = n / road_length,
+         incidents_per_mile_annual = incidents_per_mile / 4)
 
 #which streets have the highest accident rate?
 
 accident_rate <- matched_streets %>%
-  select(osm_name,n,road_length,incidents_per_mile) %>%
-  arrange(desc(incidents_per_mile)) %>%
-  view()
+  select(osm_name,moco_name,n,road_length,incidents_per_mile,incidents_per_mile_annual) %>%
+  arrange(desc(incidents_per_mile_annual)) 
 
 #lets filter out roads with 3 or fewer accidents just to focus on places that are higher impact
 
@@ -123,53 +121,55 @@ Revised LTS Key:
 
 ```{r}
 
-joined_lts_crash <- read_excel("joined_lts_crash.xlsx")
+joined_lts_crash <- read_excel("data/joined_lts_crash.xlsx")
 
 #The `distance` column is distance to nearest neighbor; let's remove those that are distant from any given street, allowing for GPS imprecision 
 
 joined_lts_crash_filtered <- joined_lts_crash %>%
   filter(distance < 50) %>%
-  filter(!is.na(join_LTS_REV))
+  filter(!is.na(join_LTS_REV)) %>%
+  filter(join_LTS_REV != "TRANS") %>%
+  filter(join_LTS_REV != "P")
 
 order <- c("NO APPARENT INJURY",
            "POSSIBLE INJURY",
            "SUSPECTED MINOR INJURY",
            "SUSPECTED SERIOUS INJURY",
            "FATAL INJURY")
+
+joined_lts_crash_filtered$`Injury Severity` <- factor(joined_lts_crash_filtered$`Injury Severity`,levels = order)
 ```
 
 ## LTS by incident severity
 
 ```{r}
-ggplot(joined_lts_crash_filtered,aes(x=join_LTS_REV,fill=factor(`Injury Severity`, levels = order))) +
+ggplot(joined_lts_crash_filtered,aes(x=join_LTS_REV,fill=`Injury Severity`)) +
   geom_bar() +
   labs(title="Bike Incident Injury Severity by \n Level of Traffic Stress (LTS) of nearest street",
        x="LTS",
        y="Number of incidents",
        fill="Injury Severity")
 
-table(joined_lts_crash_filtered$join_LTS,factor(joined_lts_crash_filtered$`Injury Severity`,levels = order))
-
 ```
 
 ## Injury Severity by other road characteristics
 
 ```{r}
-ggplot(joined_lts_crash_filtered,aes(x=join_AVG_SLOPE,y=factor(`Injury Severity`, levels = order))) +
+ggplot(joined_lts_crash_filtered,aes(x=join_AVG_SLOPE,y=`Injury Severity`)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.1) +
   labs(title = "Injury Severity by \n Average Slope of road segment",
        x = "Average Slope",
        y = "Injury Severity")
 
-ggplot(joined_lts_crash_filtered,aes(x=as.double(join_SPEEDLIM),y=factor(`Injury Severity`, levels = order))) +
+ggplot(joined_lts_crash_filtered,aes(x=as.double(join_SPEEDLIM),y=`Injury Severity`)) +
   geom_boxplot()  +
   geom_jitter(alpha = 0.1) +
   labs(title = "Injury Severity by \n speed limit of road segment",
        x = "Speed Limit",
        y = "Injury Severity")
 
-ggplot(joined_lts_crash_filtered,aes(x=as.double(join_BKLNWIDTH),y=factor(`Injury Severity`, levels = order))) +
+ggplot(joined_lts_crash_filtered,aes(x=as.double(join_BKLNWIDTH),y=`Injury Severity`)) +
   geom_jitter(alpha=0.3,shape = 16) +
   labs(title = "Injury Severity by \n Bike Lane Width of road segment",
        x = "Bike Lane Width (in feet) \n (0 means no bike lane)",
@@ -177,12 +177,102 @@ ggplot(joined_lts_crash_filtered,aes(x=as.double(join_BKLNWIDTH),y=factor(`Injur
 
 ```
 
-# Correlation of Incident Severity and LTS
+# Association of Incident Severity and LTS
 
 Since we don't have traffic data, we can't make assumptions about the impact of LTS on incident rate - we just don't have the denominator. We *can* make assumptions about incident severity. 
 
 ```{r}
 
+#contingency table of LTS vs injury severity
+table(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`)
+
+#distribution, row-wise
+prop.table(table(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`), margin = 1)
+
+#Test for independence
+#Chi-squared test
+chisq.test(table(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`))
+#p = 0.1315, but too many values of <5 for the results to be valid
+
+#Fishers test
+#Uses monte carlo simulation when the contingency table is larger than 2x2 (simulate.p.value = T), which also means we can't get confidence intervals out of it.
+fisher.test(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+# p = 0.04048 (will vary as seed changes)
+#With p-values of <0.05, we can reject the null hypothesis and assume that these LTS and Injury Severity are associated 
+
+### test some other associations ###
+
+#weather 
+fisher.test(joined_lts_crash_filtered$Weather,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#no association
+
+#light status (daylight, dawn, etc)
+fisher.test(joined_lts_crash_filtered$Light,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#highly associated (p = 0.007) but n is very low
+
+#number of lanes
+fisher.test(joined_lts_crash_filtered$join_MP_LANES,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#no association
+
+#speed limit
+fisher.test(joined_lts_crash_filtered$join_SPEEDLIM,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#highly associated (p = 0.008) - expected as speed limit is a factor in LTS
+
+#shared road
+fisher.test(joined_lts_crash_filtered$join_MP_SHARDRD,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#no association
+
+#average slope
+fisher.test(joined_lts_crash_filtered$join_AVG_SLOPE,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
+#no association
+
+# to get a confidence interval we need to reduce the result (injury) to two levels: injury or no injury
+simplified_injuries <- joined_lts_crash_filtered %>%
+  mutate(injury = case_when(
+    `Injury Severity` == "NO APPARENT INJURY" ~ "No injury",
+    `Injury Severity` == "POSSIBLE INJURY" ~ "Injury",
+    `Injury Severity` == "SUSPECTED MINOR INJURY" ~ "Injury",
+    `Injury Severity` == "SUSPECTED SERIOUS INJURY" ~ "Injury",
+    `Injury Severity` == "FATAL INJURY" ~ "Injury")) %>%
+  select(join_LTS_REV,injury) %>%
+  table()
+
+simplified_injuries
+
+prop.test(simplified_injuries)
+#this also uses chi-sq and still doesn't return a confidence interval
 
 ```
+
+Try something different. Bring in accident rates on each street + avg (mean?) LTS of those streets? Would need to convert LTS to an int; remove P, TRANS, NA, etc.
+
+(some manual cleaning done on xlsx, e.g. matching "1st St" to "FIRST ST")
+
+```{r}
+LTS_streets <- read_excel("data/LTS.xlsx")
+
+AVG_LTS_Street <- LTS_streets %>%
+  mutate(STREET_NAME = paste(STREET_N_1,STREET_TYP)) %>%
+  group_by(STREET_NAME) %>%
+  mutate(AVG_LTS = mean(as.numeric(LTS_REV),na.omit=T)) %>%
+  select(STREET_NAME,AVG_LTS) %>%
+  distinct()
+
+LTS_accident_rate_joined <- AVG_LTS_Street %>%
+  full_join(accident_rate, by = c("STREET_NAME" = "moco_name")) %>%
+  mutate(incidents_per_mile_annual = ifelse(!is.na(incidents_per_mile_annual),incidents_per_mile_annual,0)) #streets with no incidents have a rate of 0
+
+
+#correlation of average LTS across a street and incident rate across a street. 
+cor.test(LTS_accident_rate_joined$AVG_LTS,LTS_accident_rate_joined$incidents_per_mile_annual)
+#this shows no correlation, so we can assume that at the broad "road" level there is no correlation between the average road LTS and the incident rate per mile; instead we can posit that accidents happen in clustered hotspots where the LTS is high, even if the average LTS along the whole of the road is lower.
+#Additionally, the very large number of roads with zero accidents may mean that this test is not reliable/assumptions are not
+
+LTS_accident_rate_joined %>%
+  ggplot(aes(x=AVG_LTS,y=incidents_per_mile_annual)) +
+  geom_point(alpha=0.5)
+
+
+```
+
 

@@ -7,7 +7,6 @@
 library(tidyverse)
 library(jsonlite)
 `%notin%` <- Negate(`%in%`)
-library(lubridate)
 library(reclin)
 library(readxl)
 library(writexl)
@@ -18,89 +17,6 @@ library(ggspatial)
 library(ggmap)
 
 `%notin%` <- Negate(`%in%`)
-
-#### CAPITOL BIKESHARE DATA ####
-
-### Ingest MoCo Station List ###
-
-# MoCo BikeShare Stations
-
-url <- "https://data.montgomerycountymd.gov/resource/pdp9-g3gw.json"
-
-moco_stations <- fromJSON(url)
-
-### Ingest Bikeshare Rides data ###
-# historical data only available as CSV
-# use entire year 2020 as source
-
-#data is split into 11 monthly files (April lumped in with May)
-#iterate over each and read them in
-
-bikerides <- NULL
-
-file_list <- list.files("data/rides_data")
-
-for (i in 1:length(file_list)) {
-  rides <- read_csv(paste0("data/rides_data/",file_list[i]))
-  
-  #cleanup change in data format midway through 2020
-  if (i <= 3) {
-    rides <- rides %>%
-      rename(started_at = `Start date`,
-             ended_at = `End date`,
-             start_station_name = `Start station`,
-             end_station_name = `End station`)
-  }
-  
-  rides <- rides %>%
-    select(started_at,ended_at,start_station_name,end_station_name)
-  
-  bikerides <- rbind(bikerides,rides)
-}
-
-### Process Data ###
-
-#make the datetime strings into datetime objects
-bikerides$started_at <- as_datetime(bikerides$started_at)
-bikerides$ended_at <- as_datetime(bikerides$ended_at)
-
-#calculate duration
-bikerides$duration <- difftime(bikerides$ended_at, bikerides$started_at, units = "mins")
-
-all_stations <- bikerides %>%
-  select(start_station_name) %>%
-  distinct()
-
-#station names don't match exactly between MoCo Data and Bikeshare data - use reclin to match pairs
-
-#possible_pairs <- pair_blocking(all_stations,moco_stations) %>%
-#  compare_pairs(by=c("name"),default_comparator = lcs()) %>%
-#  score_problink() %>%
-#  select_n_to_m() %>%
-#  link(all_x = F,all_y=T) 
-
-#reclin did a good job but needs some manual fixes
-#export to excel for cleanup
-#write_xlsx(possible_pairs,"possible_station_pairs.xlsx")
-
-#re-import
-#it appears that some stations in the MoCo list have been closed or moved; name.x is NA for those. Need to remove.
-matched_stations <- read_excel("possible_pairs_cleaned.xlsx") %>%
-  filter(!is.na(name.x))
-
-#filter to just the moco stations
-stations <- matched_stations %>%
-  filter(name.y %in% moco_stations$name) %>%
-  rename(name = name.x,
-         moco_name = name.y) %>%
-  select(name, moco_name) %>%
-  left_join(moco_stations, by = c("moco_name" = "name")) %>%
-  select(name, the_geom)
-
-#limit to stations where Start AND End are in MoCo
-bikerides <- bikerides %>%
-  filter(start_station_name %in% stations$name) %>%
-  filter(end_station_name %in% stations$name)
 
 #### BIKE INCIDENTS DATA ####
 
@@ -188,11 +104,10 @@ streets_df$name <- toupper(streets_df$name)
 #write_xlsx(possible_pairs,"possible_street_pairs.xlsx")
 
 #read in cleaned data
-matched_streets <- read_excel("possible_street_pairs_cleaned.xlsx") %>%
+matched_streets <- read_excel("data/possible_street_pairs_cleaned.xlsx") %>%
   rename(osm_name = name.y,
          moco_name = name.x)
 
 #save objects for use in other scripts
 
-
-save(bike_incidents,matched_streets,moco_bb,moco_stations,osm_streets,bikerides,osm_bike, file="data/bike_data.RData")
+save(bike_incidents,matched_streets,moco_bb,osm_streets,osm_bike, file="data/bike_data.RData")
