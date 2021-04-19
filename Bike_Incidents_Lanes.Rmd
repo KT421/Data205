@@ -28,8 +28,6 @@ ggmap(map2) +
   labs(title = "Bike Incident Severity Map with Bike Lanes") +
   theme(legend.position = c(0.8,0.8))
 
-ggsave("incidents_cycleways.png", width = 9, height = 9, units = "in")
-  
 ```
 
 # Find road lenghts
@@ -154,7 +152,7 @@ ggplot(joined_lts_crash_filtered,aes(x=join_LTS_REV,fill=`Injury Severity`)) +
 
 ## Injury Severity by other road characteristics
 
-```{r}
+```{r warning = FALSE}
 ggplot(joined_lts_crash_filtered,aes(x=join_AVG_SLOPE,y=`Injury Severity`)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.1) +
@@ -183,6 +181,8 @@ Since we don't have traffic data, we can't make assumptions about the impact of 
 
 ```{r}
 
+set.seed(1)
+
 #contingency table of LTS vs injury severity
 table(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`)
 
@@ -207,14 +207,13 @@ Next, test some other associations
 #weather - no association
 fisher.test(joined_lts_crash_filtered$Weather,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
-
 #light status (daylight, dawn, etc) - highly associated (p = 0.007) but n is very low
 fisher.test(joined_lts_crash_filtered$Light,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
 #number of lanes - no association
 fisher.test(joined_lts_crash_filtered$join_MP_LANES,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
-#speed limit - highly associated (p = 0.008) - expected as speed limit is a factor in LTS
+#speed limit - highly associated (p = 0.006) - expected as speed limit is a factor in LTS
 fisher.test(joined_lts_crash_filtered$join_SPEEDLIM,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
 #shared road - no association
@@ -245,7 +244,7 @@ Try something different. Bring in accident rates on each street + avg (mean?) LT
 
 (some manual cleaning done on xlsx, e.g. matching "1st St" to "FIRST ST")
 
-```{r message = FALSE}
+```{r warning = FALSE}
 LTS_streets <- read_excel("data/LTS.xlsx")
 
 AVG_LTS_Street <- LTS_streets %>%
