@@ -123,16 +123,19 @@ of the nearest road segment.
 [LTS
 Methodology](https://montgomeryplanning.org/wp-content/uploads/2017/11/Appendix-D.pdf)
 
-Revised LTS Key: - LTS 0 – None (separated trails and breezeways) - LTS
-1 – Very Low (Neighborhood roads, suitable for children) - LTS 2 – Low
-(“suitable for most adults”) - LTS 2.5 – Moderate Low - LTS 3 – Moderate
-High (four lane road with bike lane) - LTS 4 – High (&gt;40mph road) -
-LTS 5 – Very High (“few bicyclists will brave these roads”) - LTS 9 -
-(not defined in methodology document; appears to be freeways/ramps.
-Accidents reported on these roads are n=11, 9 of which are labeled as at
-crossings) - TRANS - (not defined in methodology document; appears to be
-Transit station related?) - P - (not defined in methodology document;
-appears to be parking lots)
+Revised LTS Key: - LTS 0 – None (separated trails and breezeways)  
+- LTS 1 – Very Low (Neighborhood roads, suitable for children)  
+- LTS 2 – Low (“suitable for most adults”)  
+- LTS 2.5 – Moderate Low  
+- LTS 3 – Moderate High (four lane road with bike lane)  
+- LTS 4 – High (&gt;40mph road)  
+- LTS 5 – Very High (“few bicyclists will brave these roads”)  
+- LTS 9 - (not defined in methodology document; appears to be
+freeways/ramps. Accidents reported on these roads are n=11, 9 of which
+are labeled as at crossings)  
+- TRANS - (not defined in methodology document; appears to be Transit
+station related?)  
+- P - (not defined in methodology document; appears to be parking lots)
 
 ``` r
 joined_lts_crash <- read_excel("data/joined_lts_crash.xlsx")
@@ -304,10 +307,12 @@ fisher.test(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`In
 ``` r
 # p = 0.04048 (will vary as seed changes)
 #With p-values of <0.05, we can reject the null hypothesis and assume that these LTS and Injury Severity are associated 
+```
 
-### test some other associations ###
+Next, test some other associations
 
-#weather 
+``` r
+#weather - no association
 fisher.test(joined_lts_crash_filtered$Weather,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -316,13 +321,11 @@ fisher.test(joined_lts_crash_filtered$Weather,joined_lts_crash_filtered$`Injury 
     ##  2000 replicates)
     ## 
     ## data:  joined_lts_crash_filtered$Weather and joined_lts_crash_filtered$`Injury Severity`
-    ## p-value = 0.4983
+    ## p-value = 0.5222
     ## alternative hypothesis: two.sided
 
 ``` r
-#no association
-
-#light status (daylight, dawn, etc)
+#light status (daylight, dawn, etc) - highly associated (p = 0.007) but n is very low
 fisher.test(joined_lts_crash_filtered$Light,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -331,13 +334,11 @@ fisher.test(joined_lts_crash_filtered$Light,joined_lts_crash_filtered$`Injury Se
     ##  2000 replicates)
     ## 
     ## data:  joined_lts_crash_filtered$Light and joined_lts_crash_filtered$`Injury Severity`
-    ## p-value = 0.008996
+    ## p-value = 0.003498
     ## alternative hypothesis: two.sided
 
 ``` r
-#highly associated (p = 0.007) but n is very low
-
-#number of lanes
+#number of lanes - no association
 fisher.test(joined_lts_crash_filtered$join_MP_LANES,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -350,9 +351,7 @@ fisher.test(joined_lts_crash_filtered$join_MP_LANES,joined_lts_crash_filtered$`I
     ## alternative hypothesis: two.sided
 
 ``` r
-#no association
-
-#speed limit
+#speed limit - highly associated (p = 0.008) - expected as speed limit is a factor in LTS
 fisher.test(joined_lts_crash_filtered$join_SPEEDLIM,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -361,13 +360,11 @@ fisher.test(joined_lts_crash_filtered$join_SPEEDLIM,joined_lts_crash_filtered$`I
     ##  2000 replicates)
     ## 
     ## data:  joined_lts_crash_filtered$join_SPEEDLIM and joined_lts_crash_filtered$`Injury Severity`
-    ## p-value = 0.004498
+    ## p-value = 0.005997
     ## alternative hypothesis: two.sided
 
 ``` r
-#highly associated (p = 0.008) - expected as speed limit is a factor in LTS
-
-#shared road
+#shared road - no association
 fisher.test(joined_lts_crash_filtered$join_MP_SHARDRD,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -376,13 +373,11 @@ fisher.test(joined_lts_crash_filtered$join_MP_SHARDRD,joined_lts_crash_filtered$
     ##  2000 replicates)
     ## 
     ## data:  joined_lts_crash_filtered$join_MP_SHARDRD and joined_lts_crash_filtered$`Injury Severity`
-    ## p-value = 0.8681
+    ## p-value = 0.8796
     ## alternative hypothesis: two.sided
 
 ``` r
-#no association
-
-#average slope
+#average slope - no association
 fisher.test(joined_lts_crash_filtered$join_AVG_SLOPE,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 ```
 
@@ -391,12 +386,10 @@ fisher.test(joined_lts_crash_filtered$join_AVG_SLOPE,joined_lts_crash_filtered$`
     ##  2000 replicates)
     ## 
     ## data:  joined_lts_crash_filtered$join_AVG_SLOPE and joined_lts_crash_filtered$`Injury Severity`
-    ## p-value = 0.8621
+    ## p-value = 0.8661
     ## alternative hypothesis: two.sided
 
 ``` r
-#no association
-
 # to get a confidence interval we need to reduce the result (injury) to two levels: injury or no injury
 simplified_injuries <- joined_lts_crash_filtered %>%
   mutate(injury = case_when(
@@ -1421,4 +1414,4 @@ LTS_accident_rate_joined %>%
 
     ## Warning: Removed 97 rows containing missing values (geom_point).
 
-![](Bike_Incidents_Lanes_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](Bike_Incidents_Lanes_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
