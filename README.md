@@ -4,13 +4,26 @@ Katelyn Schreyer
 Spring 2021
 DATA 205
 
-This capstone project is intended to provide recommendations on the highest impact locations for new bicycle infrastructure in Montgomery County, Maryland. 
+The goal of thisn capstone project is to provide a list of suggestions for the highest impact roads or road segments to install new bike lanes in Montgomery County, MD. 
 
 ## File Directory
 
 Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` files are configured to display well in the github web-based interface, while the `.Rmd` files are suitable for cloning into RStudio to run locally. 
 
-- **FILE DIRECTORY GOES HERE**
+- `Bike_Incidents_Lanes_files/` - image files for the markdown page
+- `data/` - source data files
+- `Bike_Incidents_Lanes.Rmd` - RMarkdown file in which analysis was done
+- `Bike_incidents_Lanes.md` - Same file as above but compiled to view nicely on github
+- `data_ingestion_cleaning.R` - Script to ingest and clean the various data sources
+- `moco_qgis_project.qgz` - QGIS Project file
+- `final_report.pdf` - Final Project Report
+- `final_report.ppt` - Final Project Report Slide Deck
+
+## Data Sources
+
+- [dataMontgomery Non-motorist collisions](https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Non-Motorists-Data/n7fk-dce5)
+- [OpenStreetMap](https://www.openstreetmap.org/)
+- [Montgomery Countery Bicycle Master Plan](https://montgomeryplanning.org/planning/transportation/bicycle-planning/bicycle-master-plan/)
 
 ## Project Timeline
 
@@ -47,12 +60,12 @@ Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` fil
 
 ### Synthesizing data - April 28
 
-- [ ] Which roads or road segments should be prioritized for bike lane additions? 
-    - [ ] Synthesis of high incident/mile rate, existing infrastructure, planned infrastructure 
+- [x] Which roads or road segments should be prioritized for bike lane additions? 
+    - [x] Synthesis of high incident/mile rate, existing infrastructure, planned infrastructure 
 
 ### Draft Report - May 5
 
-- [ ] Produce final list of recommendations
+- [x] Produce final list of recommendations
 - [ ] Submit Draft final report
 - [ ] Resume
 
@@ -61,8 +74,3 @@ Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` fil
 - [ ] Final Report
 - [ ] Final Presentation
 
-## Data Sources
-
-- [dataMontgomery Non-motorist collisions](https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Non-Motorists-Data/n7fk-dce5)
-- [OpenStreetMap](https://www.openstreetmap.org/)
-- [Montgomery Countery Bicycle Master Plan](https://montgomeryplanning.org/planning/transportation/bicycle-planning/bicycle-master-plan/)
