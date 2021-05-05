@@ -66,8 +66,7 @@ Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` fil
 ### Draft Report - May 5
 
 - [x] Produce final list of recommendations
-- [ ] Submit Draft final report
-- [ ] Resume
+- [x] Draft final report
 
 ### Final - May 12
 
