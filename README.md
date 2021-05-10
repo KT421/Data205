@@ -17,7 +17,7 @@ Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` fil
 - `data_ingestion_cleaning.R` - Script to ingest and clean the various data sources
 - `moco_qgis_project.qgz` - QGIS Project file
 - `final_report.pdf` - Final Project Report
-- `final_report.ppt` - Final Project Report Slide Deck
+- `final_report.pptx` - Final Project Report Slide Deck
 
 ## Data Sources
 
@@ -70,6 +70,6 @@ Note: R Markdown notebooks are provided as `.md` and `.Rmd` files. The `.md` fil
 
 ### Final - May 12
 
-- [ ] Final Report
-- [ ] Final Presentation
+- [x] Final Report
+- [x] Final Presentation
 
