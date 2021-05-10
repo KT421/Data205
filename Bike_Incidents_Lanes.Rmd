@@ -200,7 +200,7 @@ chisq.test(table(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtere
 #Fishers test
 #Uses monte carlo simulation when the contingency table is larger than 2x2 (simulate.p.value = T), which also means we can't get confidence intervals out of it.
 fisher.test(joined_lts_crash_filtered$join_LTS_REV,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
-# p = 0.04048 (will vary as seed changes)
+# p = 0.04348 
 #With p-values of <0.05, we can reject the null hypothesis and assume that these LTS and Injury Severity are associated 
 ```
 
@@ -210,13 +210,13 @@ Next, test some other associations
 #weather - no association
 fisher.test(joined_lts_crash_filtered$Weather,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
-#light status (daylight, dawn, etc) - highly associated (p = 0.007) but n is very low
+#light status (daylight, dawn, etc) - highly associated (p = 0.005997) but n is very low
 fisher.test(joined_lts_crash_filtered$Light,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
 #number of lanes - no association
 fisher.test(joined_lts_crash_filtered$join_MP_LANES,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
-#speed limit - highly associated (p = 0.006) - expected as speed limit is a factor in LTS
+#speed limit - highly associated (p = 0.004998) - expected as speed limit is a factor in LTS
 fisher.test(joined_lts_crash_filtered$join_SPEEDLIM,joined_lts_crash_filtered$`Injury Severity`,simulate.p.value = T)
 
 #shared road - no association
